@@ -30,7 +30,7 @@ const SearchScreen = () => {
 export default function App() {
   return (
     <NavigationContainer>
-      <Drawer.Navigator initialRouteName="LandPage">
+      <Drawer.Navigator initialRouteName="Search">
       <Drawer.Screen name="LandPage" component={LandPagScreen} />
       <Drawer.Screen name="Search" component={SearchScreen} />
     </Drawer.Navigator>

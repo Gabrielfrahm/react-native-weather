@@ -1,5 +1,5 @@
-import React, { useState, useEffect,  } from 'react'
-import { View, Text, TextInput, TouchableOpacity, StyleSheet } from 'react-native'
+import React, { useState, } from 'react'
+import { View, Text, TextInput, TouchableOpacity, StyleSheet, ActivityIndicator } from 'react-native'
 import { MaterialIcons } from '@expo/vector-icons';
 import { colors } from '../utils/index';
 import Previous from '../components/Previous';
@@ -12,8 +12,9 @@ import { useNavigation } from '@react-navigation/native';
 
 const BASE_WEATHER_URL = 'https://api.openweathermap.org/data/2.5/weather?';
 export default function Search() {
+    const [loading, setLoading] = useState(false);
     const [errorMessage, setErrorMessage] = useState(null);
-    const [currentCity, setCurrentCity] = useState({});
+
     const [unitsSystem, setUnitsSystem] = useState('metric');
     const [cityName, setCityName] = useState('');
     const dispatch = useDispatch();
@@ -28,17 +29,29 @@ export default function Search() {
     });
 
     const handleSubmit = async () => {
-        setErrorMessage(null);
         try {
+            setLoading(true);
+
             const response = await fetch(`https://api.opencagedata.com/geocode/v1/json?key=e85809527b0341b18712ec1bacc3aab9&q=${cityName}`);
-            const result = await response.json();
+            const result1 = await response.json();
+
+            if (cityName === '') {
+                return setLoading(false);
+            }
+
             if (response.ok) {
+
                 const {
                     results: [{
                         components: { state_code, city, country },
                         geometry: { lat, lng },
                     }]
-                } = result;
+                } = result1;
+
+                const weatherUrl = `${BASE_WEATHER_URL}lat=${lat}&lon=${lng}&units=${unitsSystem}&appid=${WEATHER_API_KEY}`;
+
+                const response2 = await fetch(weatherUrl);
+                const result = await response2.json();
 
                 dispatch(cityRequest({
                     state_code,
@@ -46,7 +59,11 @@ export default function Search() {
                     country,
                     lat,
                     lng,
+                    result
                 }));
+                navigation.navigate('Weather', { result, lat, lng },);
+                setCityName('');
+                setLoading(false);
             } else {
                 setErrorMessage(result.message);
             }
@@ -57,8 +74,8 @@ export default function Search() {
     };
 
     const handleGetLocation = async () => {
-        setErrorMessage(null);
         try {
+            setLoading(true);
             let { status } = await Location.requestForegroundPermissionsAsync();
             if (status !== 'granted') {
                 setErrorMessage('Access to location is needed to run the app');
@@ -71,15 +88,11 @@ export default function Search() {
 
             const response = await fetch(weatherUrl);
             const result = await response.json();
-            
+
             if (response.ok) {
-                // setCurrentCity(result);
-                const {
-                    name,
-                } = result;
-                // console.log(name);
-                navigation.navigate('Weather',  {result} )
-                
+
+                navigation.navigate('Weather', { result, });
+                setLoading(false);
             } else {
                 setErrorMessage(result.message);
             }
@@ -88,10 +101,12 @@ export default function Search() {
             setErrorMessage(err.message)
         }
     }
-    // console.log(currentCity);
 
     return (
         <View style={styles.container}>
+            {loading && <View style={styles.loading}>
+                <ActivityIndicator size="large" color={colors.PRIMARY_COLOR} />
+            </View>}
             <View style={styles.main}>
                 <Text style={styles.textHeader} >Type your location here:</Text>
                 <TextInput
@@ -103,7 +118,7 @@ export default function Search() {
                 />
                 {error && <Text style={{ color: 'red', textAlign: 'center' }}>voce ja tem essa cidade pesquisada recentemente</Text>}
                 <View style={styles.buttons}>
-                    <TouchableOpacity onPress={handleSubmit } style={styles.button}>
+                    <TouchableOpacity onPress={handleSubmit} style={styles.button}>
                         <Text style={styles.textButton}>Submit</Text>
                     </TouchableOpacity>
                     <TouchableOpacity onPress={handleGetLocation} style={styles.button}>
@@ -115,9 +130,9 @@ export default function Search() {
                     cities.length !== 0
                         ?
                         cities.map(item => (
-                            <Previous key={item.city} name={item.city} uf={item.state_code} country={item.country} />
+                            <Previous key={item.city} name={item.city} uf={item.state_code} country={item.country} result={item.result} lat={item.lat} lng={item.lng} />
                         ))
-                        : <Text style={styles.textEmpty}>Empty 😢</Text>
+                        : <View style={styles.textEmpty}><Text style={{ fontSize: 20, }} >Empty 😢</Text></View>
                 }
             </View>
         </View>
@@ -144,6 +159,8 @@ const styles = StyleSheet.create({
         borderRadius: 10,
         height: 70,
         fontSize: 20,
+        padding: 10,
+
     },
     buttons: {
         flexDirection: 'row',
@@ -171,8 +188,18 @@ const styles = StyleSheet.create({
     },
     textEmpty: {
         color: colors.BORDER_COLOR,
-        // margin: '',
-        textAlign: 'center',
-        fontSize: 20,
+        justifyContent: 'center',
+        alignItems: 'center',
+        flex: 1,
+    },
+    loading: {
+        justifyContent: 'center',
+        zIndex: 500,
+        position: 'absolute',
+        backgroundColor: colors.BORDER_COLOR,
+        opacity: 0.7,
+        height: '100%',
+        width: '100%',
+        flex: 1,
     }
 });

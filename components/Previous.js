@@ -2,16 +2,18 @@ import React from 'react'
 import { View, Text, StyleSheet } from 'react-native'
 import { AntDesign } from '@expo/vector-icons';
 import { colors } from '../utils/index';
+import { useNavigation } from '@react-navigation/native';
 
-
-export default function Previous({name, uf, country}) {
+export default function Previous({name, uf, country, result, lat, lng }) {
+    const navigation = useNavigation();
     return (
-        <View style={styles.container}>
+        <View  style={styles.container}>
             <View style={styles.main}>
                 <Text style={styles.textInfoCity} >
                     {name}{"\n"}<Text style={styles.subTextInfoCity}>{uf}, {country}
                 </Text></Text>
-                <AntDesign  
+                <AntDesign
+                    onPress={() =>  navigation.navigate('Weather', { result, lat, lng })}
                     style={styles.arrow} 
                     name="arrowright" 
                     size={30} 

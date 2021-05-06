@@ -38,7 +38,6 @@ export default function App() {
         <Drawer.Navigator initialRouteName="Search">
           <Drawer.Screen name="LandPage" component={LandPagScreen} />
           <Drawer.Screen name="Search" component={SearchScreen} />
-          <Drawer.Screen name="Weather" component={Weather} />
         </Drawer.Navigator>
       </NavigationContainer>
     </Provider>

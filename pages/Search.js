@@ -97,7 +97,6 @@ export default function Search() {
 
             const response1 = await fetch(`https://api.opencagedata.com/geocode/v1/json?key=e85809527b0341b18712ec1bacc3aab9&q=${result.name}`);
             const result1 = await response1.json();
-            console.log(result1)
 
             if (response.ok) {
                 const {

@@ -14,17 +14,18 @@ const BASE_WEATHER_URL = 'https://api.openweathermap.org/data/2.5/weather?';
 
 export default function Weather({ route }) {
   const [errorMessage, setErrorMessage] = useState(null);
-  const [currentWeather, setCurrentWeather] = useState(route.params.result);
+  const [currentWeather, setCurrentWeather] = useState(null);
   const [unitsSystem, setUnitsSystem] = useState('metric'); //imperial f
 
   useEffect(() => {
     load();
   }, [unitsSystem])
 
-  console.log(route.params.lat);
-  console.log(route.params.lng);
-
   async function load() {
+    const weatherUrl = `${BASE_WEATHER_URL}lat=${route.params.lat}&lon=${route.params.lng}&units=${unitsSystem}&appid=${WEATHER_API_KEY}`;
+    const response = await fetch(weatherUrl);
+    const result = await response.json();
+    setCurrentWeather(result);
   }
 
   if (currentWeather) {

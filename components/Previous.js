@@ -4,7 +4,7 @@ import { AntDesign } from '@expo/vector-icons';
 import { colors } from '../utils/index';
 import { useNavigation } from '@react-navigation/native';
 
-export default function Previous({name, uf, country, result, lat, lng }) {
+export default function Previous({name, uf, country,  lat, lng }) {
     const navigation = useNavigation();
     return (
         <View  style={styles.container}>
@@ -13,7 +13,7 @@ export default function Previous({name, uf, country, result, lat, lng }) {
                     {name}{"\n"}<Text style={styles.subTextInfoCity}>{uf}, {country}
                 </Text></Text>
                 <AntDesign
-                    onPress={() =>  navigation.navigate('Weather', { result, lat, lng })}
+                    onPress={() =>  navigation.navigate('Weather', {  lat, lng })}
                     style={styles.arrow} 
                     name="arrowright" 
                     size={30} 

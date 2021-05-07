@@ -8,12 +8,13 @@ import { cityRequest } from '../store/modules/city/action';
 import * as Location from 'expo-location';
 import { WEATHER_API_KEY } from 'react-native-dotenv';
 import { useNavigation } from '@react-navigation/native';
+import ReloadICon from '../components/ReloadIcon';
 
 
 const BASE_WEATHER_URL = 'https://api.openweathermap.org/data/2.5/weather?';
 export default function Search() {
     const [loading, setLoading] = useState(false);
-    const [errorMessage, setErrorMessage] = useState(null);
+    const [errorMessage, setErrorMessage] = useState('');
 
     const [unitsSystem, setUnitsSystem] = useState('metric');
     const [cityName, setCityName] = useState('');
@@ -27,6 +28,11 @@ export default function Search() {
     const error = useSelector(state => {
         return state.city.error;
     });
+
+    const load = () => {
+        setErrorMessage('');
+        setLoading(false);
+    }
 
     const handleSubmit = async () => {
         try {
@@ -61,7 +67,7 @@ export default function Search() {
                     lng,
                     result
                 }));
-                navigation.navigate('Weather', { result, lat, lng },);
+                navigation.navigate('Weather', { lat, lng },);
                 setCityName('');
                 setLoading(false);
             } else {
@@ -89,9 +95,19 @@ export default function Search() {
             const response = await fetch(weatherUrl);
             const result = await response.json();
 
-            if (response.ok) {
+            const response1 = await fetch(`https://api.opencagedata.com/geocode/v1/json?key=e85809527b0341b18712ec1bacc3aab9&q=${result.name}`);
+            const result1 = await response1.json();
+            console.log(result1)
 
-                navigation.navigate('Weather', { result, });
+            if (response.ok) {
+                const {
+                    results: [{
+                        components: { state_code, city, country },
+                        geometry: { lat, lng },
+                    }]
+                } = result1;
+
+                navigation.navigate('Weather', { lat, lng });
                 setLoading(false);
             } else {
                 setErrorMessage(result.message);
@@ -102,41 +118,50 @@ export default function Search() {
         }
     }
 
-    return (
-        <View style={styles.container}>
-            {loading && <View style={styles.loading}>
-                <ActivityIndicator size="large" color={colors.PRIMARY_COLOR} />
-            </View>}
-            <View style={styles.main}>
-                <Text style={styles.textHeader} >Type your location here:</Text>
-                <TextInput
-                    onChangeText={cityName => setCityName(cityName)}
-                    name="city"
-                    value={cityName}
-                    style={styles.inputCity}
-                    placeholder="digite sua cidade"
-                />
-                {error && <Text style={{ color: 'red', textAlign: 'center' }}>voce ja tem essa cidade pesquisada recentemente</Text>}
-                <View style={styles.buttons}>
-                    <TouchableOpacity onPress={handleSubmit} style={styles.button}>
-                        <Text style={styles.textButton}>Submit</Text>
-                    </TouchableOpacity>
-                    <TouchableOpacity onPress={handleGetLocation} style={styles.button}>
-                        <Text><MaterialIcons name="my-location" size={30} color="black" /></Text>
-                    </TouchableOpacity>
+    if (!errorMessage) {
+        return (
+            <View style={styles.container}>
+                {loading && <View style={styles.loading}>
+                    <ActivityIndicator size="large" color={colors.PRIMARY_COLOR} />
+                </View>}
+                <View style={styles.main}>
+                    <Text style={styles.textHeader} >Type your location here:</Text>
+                    <TextInput
+                        onChangeText={cityName => setCityName(cityName)}
+                        name="city"
+                        value={cityName}
+                        style={styles.inputCity}
+                        placeholder="digite sua cidade"
+                    />
+                    {error && <Text style={{ color: 'red', textAlign: 'center' }}>voce ja tem essa cidade pesquisada recentemente</Text>}
+                    <View style={styles.buttons}>
+                        <TouchableOpacity onPress={handleSubmit} style={styles.button}>
+                            <Text style={styles.textButton}>Submit</Text>
+                        </TouchableOpacity>
+                        <TouchableOpacity onPress={handleGetLocation} style={styles.button}>
+                            <Text><MaterialIcons name="my-location" size={30} color="black" /></Text>
+                        </TouchableOpacity>
+                    </View>
+                    <Text style={styles.textPrevious} >Previous Searches</Text>
+                    {
+                        cities.length !== 0
+                            ?
+                            cities.map(item => (
+                                <Previous key={item.city} name={item.city} uf={item.state_code} country={item.country} lat={item.lat} lng={item.lng} />
+                            ))
+                            : <View style={styles.textEmpty}><Text style={{ fontSize: 20, }} >Empty 😢</Text></View>
+                    }
                 </View>
-                <Text style={styles.textPrevious} >Previous Searches</Text>
-                {
-                    cities.length !== 0
-                        ?
-                        cities.map(item => (
-                            <Previous key={item.city} name={item.city} uf={item.state_code} country={item.country} result={item.result} lat={item.lat} lng={item.lng} />
-                        ))
-                        : <View style={styles.textEmpty}><Text style={{ fontSize: 20, }} >Empty 😢</Text></View>
-                }
             </View>
-        </View>
-    )
+        )
+    }else {
+        return (
+            <View style={styles.container}>
+                <ReloadICon load={load} />
+                <Text style={{textAlign: 'center'}}>{errorMessage}</Text>
+            </View>
+        )
+    }
 }
 
 

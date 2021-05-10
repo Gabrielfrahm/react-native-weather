@@ -83,13 +83,15 @@ export default function Search() {
         try {
             setLoading(true);
             let { status } = await Location.requestForegroundPermissionsAsync();
+            console.log(status)
             if (status !== 'granted') {
                 setErrorMessage('Access to location is needed to run the app');
                 return;
             }
-            const location = await Location.getCurrentPositionAsync();
+            const location = await Location.getCurrentPositionAsync({accuracy:Location.Accuracy.High});
 
             const { latitude, longitude } = location.coords;
+            console.log(latitude, longitude)
             const weatherUrl = `${BASE_WEATHER_URL}lat=${latitude}&lon=${longitude}&units=${unitsSystem}&appid=${WEATHER_API_KEY}`;
 
             const response = await fetch(weatherUrl);
@@ -101,7 +103,6 @@ export default function Search() {
             if (response.ok) {
                 const {
                     results: [{
-                        components: { state_code, city, country },
                         geometry: { lat, lng },
                     }]
                 } = result1;
@@ -138,7 +139,7 @@ export default function Search() {
                             <Text style={styles.textButton}>Submit</Text>
                         </TouchableOpacity>
                         <TouchableOpacity onPress={handleGetLocation} style={styles.button}>
-                            <Text><MaterialIcons name="my-location" size={30} color="black" /></Text>
+                            <Text><MaterialIcons name="my-location" size={30} color="white" /></Text>
                         </TouchableOpacity>
                     </View>
                     <Text style={styles.textPrevious} >Previous Searches</Text>
@@ -204,11 +205,13 @@ const styles = StyleSheet.create({
     textButton: {
         fontSize: 18,
         fontWeight: '700',
+        color: 'white'
     },
     textPrevious: {
         fontSize: 25,
         margin: 10,
         fontWeight: '700',
+        
     },
     textEmpty: {
         color: colors.BORDER_COLOR,
